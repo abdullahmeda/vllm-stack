@@ -61,6 +61,8 @@ kubectl get pods -w
 
 ## 🔍 Observability (Jaeger)
 
+![Jaeger Dashboard](assets/jaeger-dashboard.png)
+
 Access the Jaeger UI to visualize traces:
 
 ```bash

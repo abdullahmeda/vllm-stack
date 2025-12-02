@@ -28,6 +28,7 @@ help:
 setup-env:
 	@echo "Setting up environment prerequisites..."
 	@sudo apt install -y jq
+	@pip install --upgrade pip setuptools
 
 	@echo "Configuring git..."
 	@git config --global user.email "abdullah.meda@gmail.com"
@@ -38,6 +39,8 @@ clone-repos:
 	@echo "Cloning the repository..."
 	@git clone https://github.com/ray-project/llmperf.git
 	@git clone https://github.com/vllm-project/production-stack.git
+
+	@pip install -e llmperf
 
 # Complete Kubernetes setup
 setup-k8s: install-kubectl install-helm install-minikube
