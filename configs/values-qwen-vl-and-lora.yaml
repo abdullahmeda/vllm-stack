@@ -1,7 +1,7 @@
-# Configuration for 2x H100 GPUs with Qwen models and LoRA adapters
+# Configuration for 4x H100 GPUs with Qwen models and LoRA adapters
 # GPU allocation:
-# - H100 #1: 1x Qwen3-VL-30B-A3B-Instruct (vision-language model)
-# - H100 #2: 2x Qwen3-8B replicas (with LoRA adapters)
+# - H100 #1     : 1x Qwen3-VL-30B-A3B-Instruct (vision-language model)
+# - H100 #2 & #3: 2x Qwen3-8B replicas (with LoRA adapters)
 
 servingEngineSpec:
   runtimeClassName: ""
@@ -93,9 +93,9 @@ routerSpec:
   resources:
     requests:
       cpu: 400m
-      memory: 2Gi
+      memory: 4Gi
     limits:
-      memory: 2Gi
+      memory: 8Gi
 
 # Enable the LoRA controller (required for LoRA adapters)
 loraController:
