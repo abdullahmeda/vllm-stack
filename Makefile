@@ -23,6 +23,17 @@ help:
 	@echo ""
 	@echo "Quick start: make setup-k8s"
 
+
+# Setup environment prerequisites
+setup-env:
+	@echo "Setting up environment prerequisites..."
+	@sudo apt update && sudo apt upgrade -y
+	@sudo apt install -y jq
+
+	@echo "Configuring git..."
+	@git config --global user.email "abdullah.meda@gmail.com"
+	@git config --global user.name "Abdullah Meda"
+
 # Clone the repository
 clone-repo:
 	@echo "Cloning the repository..."
