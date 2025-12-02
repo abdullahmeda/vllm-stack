@@ -27,7 +27,6 @@ help:
 # Setup environment prerequisites
 setup-env:
 	@echo "Setting up environment prerequisites..."
-	@sudo apt update && sudo apt upgrade -y
 	@sudo apt install -y jq
 
 	@echo "Configuring git..."
