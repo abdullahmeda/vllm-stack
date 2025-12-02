@@ -122,3 +122,12 @@ See `configs/LOAD-TESTING-QUICKSTART.md` for more scenarios.
 - **Router**: Traces request routing.
 - **Models**: Traces inference execution.
 - **LoRA**: Traces adapter loading and switching.
+
+## 🗺️ Roadmap
+
+Future enhancements planned for this stack:
+
+- [ ] **Streamlit Chat UI**: A web interface to chat with models, switch adapters, and upload images for VL tasks.
+- [ ] **KEDA Autoscaling**: Scale Qwen-8B replicas based on request queue depth.
+- [ ] **Secure Serving**: Implement API key authentication and TLS termination.
+
