@@ -5,6 +5,7 @@ help:
 	@echo "vLLM Production Stack - Kubernetes Setup Makefile"
 	@echo ""
 	@echo "Available targets:"
+	@echo "  setup-env          - Setup environment prerequisites"
 	@echo "  clone-repo         - Clone the official vllm production-stack repository"
 	@echo "  setup-k8s          - Complete setup (kubectl + helm + minikube with GPU)"
 	@echo "  install-kubectl    - Install kubectl CLI tool"
@@ -22,7 +23,6 @@ help:
 	@echo "  - Docker installed and configured (no sudo required)"
 	@echo ""
 	@echo "Quick start: make setup-k8s"
-
 
 # Setup environment prerequisites
 setup-env:
