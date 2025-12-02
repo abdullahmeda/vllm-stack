@@ -34,8 +34,9 @@ setup-env:
 	@git config --global user.name "Abdullah Meda"
 
 # Clone the repository
-clone-repo:
+clone-repos:
 	@echo "Cloning the repository..."
+	@git clone https://github.com/ray-project/llmperf.git
 	@git clone https://github.com/vllm-project/production-stack.git
 
 # Complete Kubernetes setup

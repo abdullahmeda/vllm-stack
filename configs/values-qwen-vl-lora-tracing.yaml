@@ -1,0 +1,161 @@
+# Configuration for Qwen models with LoRA adapters and distributed tracing
+# GPU allocation:
+# - H100 #1     : 1x Qwen3-VL-30B-A3B-Instruct (vision-language model)
+# - H100 #2 & #3: 2x Qwen3-8B replicas (with LoRA adapters)
+# Monitoring: OpenTelemetry + Jaeger for distributed tracing
+
+servingEngineSpec:
+  runtimeClassName: ""
+  strategy:
+    type: Recreate
+
+  # Global environment variables for router-level tracing
+  env:
+    - name: OTEL_SERVICE_NAME
+      value: "vllm-router"
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://otel-collector:4317"
+    - name: OTEL_RESOURCE_ATTRIBUTES
+      value: "service.name=vllm-router,deployment.environment=production,component=router"
+
+  modelSpec:
+    # Model 1: Qwen3-VL-30B on first H100
+    - name: "qwen3-vl-30b"
+      repository: "vllm/vllm-openai"
+      tag: "latest"
+      modelURL: "Qwen/Qwen3-VL-30B-A3B-Instruct"
+      
+      # HuggingFace token for private/gated models
+      hf_token:
+        secretName: "huggingface-credentials"
+        secretKey: "HUGGING_FACE_HUB_TOKEN"
+
+      # vLLM configuration for 30B vision-language model
+      vllmConfig:
+        enablePrefixCaching: true
+        maxModelLen: 8192
+        dtype: "bfloat16"
+        v1: 1
+        extraArgs: 
+          - "--disable-log-requests"
+          - "--gpu-memory-utilization"
+          - "0.9"
+          - "--max-num-seqs"
+          - "32"
+
+      # OpenTelemetry tracing for VL model
+      env:
+        - name: OTEL_SERVICE_NAME
+          value: "qwen3-vl-30b"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4317"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.name=qwen3-vl-30b,deployment.environment=production,model.type=vision-language"
+
+      replicaCount: 1
+
+      # Resource requirements for 30B model on H100
+      requestCPU: 16
+      requestMemory: "64Gi"
+      requestGPU: 1
+
+      pvcStorage: "50Gi"
+      pvcAccessMode:
+        - ReadWriteOnce
+
+    # Model 2: Qwen3-8B with LoRA support
+    - name: "qwen3-8b"
+      repository: "vllm/vllm-openai"
+      tag: "latest"
+      modelURL: "Qwen/Qwen3-8B"
+      enableLoRA: true
+
+      # HuggingFace token
+      hf_token:
+        secretName: "huggingface-credentials"
+        secretKey: "HUGGING_FACE_HUB_TOKEN"
+
+      # vLLM configuration for 8B model
+      vllmConfig:
+        enablePrefixCaching: true
+        maxModelLen: 8192
+        dtype: "bfloat16"
+        v1: 1
+        extraArgs:
+          - "--disable-log-requests"
+          - "--gpu-memory-utilization"
+          - "0.85"
+
+      # Environment variables: LoRA support + OpenTelemetry tracing
+      env:
+        - name: VLLM_ALLOW_RUNTIME_LORA_UPDATING
+          value: "True"
+        - name: OTEL_SERVICE_NAME
+          value: "qwen3-8b"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://otel-collector:4317"
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.name=qwen3-8b,deployment.environment=production,model.type=text-lora"
+
+      # 2 replicas - Kubernetes will schedule across available GPUs
+      replicaCount: 2
+
+      # Resource requirements for 8B model
+      requestCPU: 8
+      requestMemory: "32Gi"
+      requestGPU: 1
+
+      pvcStorage: "20Gi"
+      pvcAccessMode:
+        - ReadWriteOnce
+
+  sidecar:
+    image: "lmcache/lmstack-sidecar:latest"
+    imagePullPolicy: "Always"
+
+# Router configuration with resource limits to prevent OOM
+routerSpec:
+  resources:
+    requests:
+      cpu: 400m
+      memory: 4Gi
+    limits:
+      memory: 8Gi
+
+# Enable the LoRA controller (required for LoRA adapters)
+loraController:
+  enableLoraController: true
+  image:
+    repository: "lmcache/lmstack-lora-controller"
+    tag: "latest"
+    pullPolicy: "Always"
+
+# LoRA adapter configuration for Qwen3-8B
+loraAdapters:
+    # Adapter 1: Translation adapter
+    - name: "qwen3-translator-adapter"
+      baseModel: "qwen3-8b"
+      adapterSource:
+        type: "huggingface"
+        adapterName: "Qwen3-8B-Translator-LoRA"
+        repository: "nananatsu/Qwen3-8B-Translator-LoRA"
+        credentials:
+          secretName: "huggingface-credentials"
+          secretKey: "HUGGING_FACE_HUB_TOKEN"
+      loraAdapterDeploymentConfig:
+        algorithm: "default"
+        replicas: 1  # Deploy to 1 of the 2 qwen3-8b replicas
+
+    # Adapter 2: Gaia LLM adapter
+    - name: "qwen3-gaia-adapter"
+      baseModel: "qwen3-8b"
+      adapterSource:
+        type: "huggingface"
+        adapterName: "Gaia-LLM-8B"
+        repository: "my2000cup/Gaia-LLM-8B"
+        credentials:
+          secretName: "huggingface-credentials"
+          secretKey: "HUGGING_FACE_HUB_TOKEN"
+      loraAdapterDeploymentConfig:
+        algorithm: "default"
+        replicas: 1  # Deploy to 1 of the 2 qwen3-8b replicas
