@@ -1,10 +1,11 @@
-.PHONY: help install-kubectl install-helm uninstall-minikube install-minikube setup-k8s verify-gpu test-gpu clean-gpu-test
+.PHONY: help clone-repo install-kubectl install-helm uninstall-minikube install-minikube setup-k8s verify-gpu test-gpu clean-gpu-test
 
 # Default target
 help:
 	@echo "vLLM Production Stack - Kubernetes Setup Makefile"
 	@echo ""
 	@echo "Available targets:"
+	@echo "  clone-repo         - Clone the official vllm production-stack repository"
 	@echo "  setup-k8s          - Complete setup (kubectl + helm + minikube with GPU)"
 	@echo "  install-kubectl    - Install kubectl CLI tool"
 	@echo "  install-helm       - Install Helm package manager"
@@ -21,6 +22,11 @@ help:
 	@echo "  - Docker installed and configured (no sudo required)"
 	@echo ""
 	@echo "Quick start: make setup-k8s"
+
+# Clone the repository
+clone-repo:
+	@echo "Cloning the repository..."
+	@git clone https://github.com/vllm-project/production-stack.git
 
 # Complete Kubernetes setup
 setup-k8s: install-kubectl install-helm install-minikube
